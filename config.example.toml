@@ -1,0 +1,35 @@
+[ksef]
+# production | demo | test
+environment = "production"
+# Jak często sprawdzać KSeF (w minutach).
+interval_minutes = 10
+# Przypomnienie o płatności: ile dni przed terminem (0 = w dniu terminu).
+remind_days_before = [1]
+# Przy pierwszym uruchomieniu wyślij też faktury z ostatnich N dni (0 = tylko nowe).
+backfill_days = 0
+# Załącznik do powiadomienia: pdf | html | xml | none
+attachment = "pdf"
+database = "/data/ksef-watch.db"
+
+# Jedna sekcja [[company]] na każdy NIP. Biuro rachunkowe może dodać wszystkich klientów
+# i kierować powiadomienia każdego z nich do osobnego czatu (telegram_chat_id).
+[[company]]
+name = "Moja Firma"
+nip = "1234567890"
+# Token KSeF wygeneruj w Aplikacji Podatnika KSeF z JEDYNYM uprawnieniem
+# "przeglądanie faktur" — ksef-watch niczego nie wystawia ani nie zmienia.
+token_env = "KSEF_TOKEN_MOJA_FIRMA"
+# telegram_chat_id = "-1001234567890"
+
+[telegram]
+# Bota zakładasz u @BotFather. chat_id: napisz do bota i otwórz
+# https://api.telegram.org/bot<TOKEN>/getUpdates
+bot_token_env = "TELEGRAM_BOT_TOKEN"
+chat_id = "123456789"
+
+# [email]
+# host = "smtp.gmail.com"
+# port = 465
+# user = "ja@example.com"
+# password_env = "SMTP_PASSWORD"
+# to = "ksiegowosc@example.com"

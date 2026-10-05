@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Faktura xmlns="http://crd.gov.pl/wzor/2025/06/25/13775/">
+  <Naglowek>
+    <KodFormularza kodSystemowy="FA (3)" wersjaSchemy="1-0E">FA</KodFormularza>
+    <WariantFormularza>3</WariantFormularza>
+    <DataWytworzeniaFa>2026-10-05T20:53:01.457800Z</DataWytworzeniaFa>
+    <SystemInfo>ksef-watch smoke</SystemInfo>
+  </Naglowek>
+  <Podmiot1>
+    <DaneIdentyfikacyjne>
+      <NIP>4659611901</NIP>
+      <Nazwa>Hurtownia Testowa Sp. z o.o.</Nazwa>
+    </DaneIdentyfikacyjne>
+    <Adres>
+      <KodKraju>PL</KodKraju>
+      <AdresL1>Prosta 1</AdresL1>
+      <AdresL2>00-001 Warszawa</AdresL2>
+    </Adres>
+  </Podmiot1>
+  <Podmiot2>
+    <DaneIdentyfikacyjne>
+      <NIP>1675877590</NIP>
+      <Nazwa>Klient Testowy</Nazwa>
+    </DaneIdentyfikacyjne>
+    <Adres>
+      <KodKraju>PL</KodKraju>
+      <AdresL1>Krzywa 2</AdresL1>
+      <AdresL2>00-002 Warszawa</AdresL2>
+    </Adres>
+    <JST>2</JST>
+    <GV>2</GV>
+  </Podmiot2>
+  <Fa>
+    <KodWaluty>PLN</KodWaluty>
+    <P_1>2026-10-05</P_1>
+    <P_1M>Warszawa</P_1M>
+    <P_2>FV/eac39c9a</P_2>
+    <P_13_1>250.00</P_13_1>
+    <P_14_1>57.50</P_14_1>
+    <P_15>307.50</P_15>
+    <Adnotacje>
+      <P_16>2</P_16>
+      <P_17>2</P_17>
+      <P_18>2</P_18>
+      <P_18A>2</P_18A>
+      <Zwolnienie>
+        <P_19N>1</P_19N>
+      </Zwolnienie>
+      <NoweSrodkiTransportu>
+        <P_22N>1</P_22N>
+      </NoweSrodkiTransportu>
+      <P_23>2</P_23>
+      <PMarzy>
+        <P_PMarzyN>1</P_PMarzyN>
+      </PMarzy>
+    </Adnotacje>
+    <RodzajFaktury>VAT</RodzajFaktury>
+    <FaWiersz>
+      <NrWierszaFa>1</NrWierszaFa>
+      <P_6A>2026-10-05</P_6A>
+      <P_7>Papier A4</P_7>
+      <P_8A>szt</P_8A>
+      <P_8B>10</P_8B>
+      <P_9A>25.00</P_9A>
+      <P_11>250.00</P_11>
+      <P_11A>307.50</P_11A>
+      <P_11Vat>57.50</P_11Vat>
+      <P_12>23</P_12>
+    </FaWiersz>
+    <Platnosc>
+      <TerminPlatnosci>
+        <Termin>2026-10-19</Termin>
+      </TerminPlatnosci>
+      <FormaPlatnosci>6</FormaPlatnosci>
+      <RachunekBankowy>
+        <NrRB>PL61109010140000071219812874</NrRB>
+      </RachunekBankowy>
+    </Platnosc>
+  </Fa>
+</Faktura>

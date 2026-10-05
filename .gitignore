@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+scratch/
+data/
+config.toml
+.env
+*.db
+*.egg-info/
+build/
+PLAN.md
