@@ -74,7 +74,7 @@ def _when(days: int) -> str:
     return f"za {days} dni" if days > 1 else f"{-days} dni po terminie"
 
 
-def new_invoice_message(inv: Invoice, company: str, today: date) -> str:
+def new_invoice_message(inv: Invoice, company: str, today: date, extra: list[str] = ()) -> str:
     lines = [
         f"{'Nowa korekta faktury' if inv.is_correction else 'Nowa faktura kosztowa'} — {company}",
         "",
@@ -86,11 +86,11 @@ def new_invoice_message(inv: Invoice, company: str, today: date) -> str:
         lines.append(f"Termin płatności: {inv.due_date:%d.%m.%Y} ({_when((inv.due_date - today).days)})")
     if inv.bank_account:
         lines.append(f"Konto: {account(inv.bank_account)}")
-    lines += ["", f"KSeF: {inv.ksef_number}"]
+    lines += [*extra, "", f"KSeF: {inv.ksef_number}"]
     return "\n".join(lines)
 
 
-def reminder_message(inv: Invoice, company: str, today: date) -> str:
+def reminder_message(inv: Invoice, company: str, today: date, extra: list[str] = ()) -> str:
     lines = [
         f"Termin płatności {_when((inv.due_date - today).days)} — {company}",
         "",
@@ -99,4 +99,4 @@ def reminder_message(inv: Invoice, company: str, today: date) -> str:
     ]
     if inv.bank_account:
         lines.append(f"Konto: {account(inv.bank_account)}")
-    return "\n".join(lines)
+    return "\n".join([*lines, *extra])

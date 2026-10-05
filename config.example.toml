@@ -9,6 +9,8 @@ remind_days_before = [1]
 backfill_days = 0
 # Załącznik do powiadomienia: pdf | html | xml | none
 attachment = "pdf"
+# Sprawdzaj konto sprzedawcy na białej liście VAT (API Ministerstwa Finansów).
+whitelist_check = true
 database = "/data/ksef-watch.db"
 
 # Jedna sekcja [[company]] na każdy NIP. Biuro rachunkowe może dodać wszystkich klientów

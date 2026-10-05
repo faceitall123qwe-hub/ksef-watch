@@ -82,7 +82,7 @@ class Recorder:
 
 def make(tmp_path, notifier, backfill=0):
     cfg = Config(environment=None, interval_minutes=10, remind_days_before=[1], backfill_days=backfill,
-                 attachment="xml", database=tmp_path / "w.db", notifiers=[notifier])
+                 attachment="xml", database=tmp_path / "w.db", notifiers=[notifier], whitelist_check=False)
     company = Company(name="Moja Firma", nip="1675877590", token="t", chat_id="42")
     return cfg, company, Store(cfg.database)
 
@@ -147,3 +147,56 @@ def test_no_separate_reminder_when_new_invoice_is_already_due_tomorrow(tmp_path)
     store.set_watermark(company.nip, day_before - timedelta(hours=1))
     watcher.check_company(company, cfg, FakeClient([Meta(KSEF_NO, day_before)]), store, day_before)
     assert len(rec.sent) == 1 and "(jutro)" in rec.sent[0][0]
+
+
+# --- VAT white list ----------------------------------------------------------------------------
+
+from ksef_watch import whitelist  # noqa: E402
+
+
+class FakeResponse:
+    def __init__(self, assigned):
+        self.assigned = assigned
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return {"result": {"accountAssigned": self.assigned, "requestId": "Hd3T6-98mm723"}}
+
+
+def test_white_list_accounts():
+    assert whitelist.domestic_account("PL61 1090 1014 0000 0712 1981 2874") == "61109010140000071219812874"
+    assert whitelist.domestic_account("DE89370400440532013000") is None
+
+
+def test_white_list_check_and_messages(monkeypatch):
+    calls = []
+    monkeypatch.setattr(whitelist.httpx, "get", lambda url, params, timeout: calls.append((url, params)) or FakeResponse("NIE"))
+    res = whitelist.check("4659611901", "PL61109010140000071219812874", date(2026, 10, 5))
+    assert calls[0][0].endswith("/nip/4659611901/bank-account/61109010140000071219812874")
+    assert calls[0][1] == {"date": "2026-10-05"}
+    big = whitelist.describe(res, Decimal("20000"), "PLN")
+    assert big[0].startswith("UWAGA: konta NIE ma") and "15 000 zł" in big[1]
+    small = whitelist.describe(res, Decimal("307.50"), "PLN")
+    assert "15 000" not in small[1]
+    ok = whitelist.describe(whitelist.Result(True, "abc", date(2026, 10, 5)), Decimal("1"), "PLN")
+    assert ok == ["Biała lista VAT: konto zgodne (05.10.2026, ID abc)"]
+
+
+def test_white_list_failure_does_not_block_notification(monkeypatch):
+    def boom(*a, **k):
+        raise ConnectionError("mf down")
+    monkeypatch.setattr(whitelist.httpx, "get", boom)
+    assert whitelist.check("4659611901", "PL61109010140000071219812874", date(2026, 10, 5)) is None
+    assert whitelist.describe(None, Decimal("1"), "PLN") == []
+
+
+def test_white_list_line_in_new_invoice_message(tmp_path, monkeypatch):
+    monkeypatch.setattr(whitelist.httpx, "get", lambda url, params, timeout: FakeResponse("TAK"))
+    rec = Recorder()
+    cfg, company, store = make(tmp_path, rec)
+    cfg.whitelist_check = True
+    store.set_watermark(company.nip, NOW - timedelta(hours=1))
+    watcher.check_company(company, cfg, FakeClient([Meta(KSEF_NO, NOW - timedelta(minutes=5))]), store, NOW)
+    assert "Biała lista VAT: konto zgodne" in rec.sent[0][0]

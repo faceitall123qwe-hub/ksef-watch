@@ -26,6 +26,7 @@ class Config:
     backfill_days: int
     attachment: str  # pdf | html | xml | none
     database: Path
+    whitelist_check: bool = True
     companies: list[Company] = field(default_factory=list)
     notifiers: list = field(default_factory=list)
 
@@ -49,6 +50,7 @@ def load(path: Path) -> Config:
         backfill_days=int(k.get("backfill_days", 0)),
         attachment=k.get("attachment", "pdf"),
         database=Path(k.get("database", "data/ksef-watch.db")),
+        whitelist_check=bool(k.get("whitelist_check", True)),
     )
     for c in raw.get("company", []):
         no_token = not (c.get("token") or c.get("token_env"))

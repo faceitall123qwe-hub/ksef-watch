@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from ksef2 import Client
 from ksef2.models import InvoicesFilter
 
-from . import invoice
+from . import invoice, whitelist
 from .config import Company, Config
 from .store import Store
 
@@ -30,6 +30,12 @@ def render(xml: bytes, kind: str, number: str) -> tuple[str, bytes] | None:
     if kind == "xml":
         return f"{safe}.xml", xml
     return None
+
+
+def white_list(inv: invoice.Invoice, cfg: Config, today) -> list[str]:
+    if not cfg.whitelist_check or not inv.bank_account:
+        return []
+    return whitelist.describe(whitelist.check(inv.seller_nip, inv.bank_account, today), inv.gross, inv.currency)
 
 
 def authenticate(client: Client, company: Company):
@@ -63,7 +69,7 @@ def check_company(company: Company, cfg: Config, client: Client, store: Store,
             continue
         xml = auth.invoices.download_invoice(ksef_number=meta.ksef_number)
         inv = invoice.parse(xml, meta.ksef_number)
-        text = invoice.new_invoice_message(inv, company.name, today)
+        text = invoice.new_invoice_message(inv, company.name, today, white_list(inv, cfg, today))
         attachment = render(xml, cfg.attachment, inv.number)
         for n in cfg.notifiers:
             n.send(text, attachment, chat_id=company.chat_id)
@@ -76,7 +82,9 @@ def check_company(company: Company, cfg: Config, client: Client, store: Store,
 
     for inv in store.due_for_reminder(company.nip, today, cfg.remind_days_before):
         for n in cfg.notifiers:
-            n.send(invoice.reminder_message(inv, company.name, today), chat_id=company.chat_id)
+            # Checked again: what counts is the account's status on the day of payment.
+            text = invoice.reminder_message(inv, company.name, today, white_list(inv, cfg, today))
+            n.send(text, chat_id=company.chat_id)
         store.mark_reminded(company.nip, inv.ksef_number, today)
     return new
 

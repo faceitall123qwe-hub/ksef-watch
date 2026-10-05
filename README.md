@@ -14,12 +14,20 @@ Kwota: 1 525,20 PLN brutto
 Nr faktury: FV/2026/10/77e5
 Termin płatności: 06.10.2026 (jutro)
 Konto: PL61 1090 1014 0000 0712 1981 2874
+UWAGA: konta NIE ma na białej liście VAT tego sprzedawcy (05.10.2026, ID hx6bD-98mm754).
+Sprawdź numer konta u sprzedawcy przed przelewem.
 
 KSeF: 8562596947-20261005-A1C168C00000-56
 [załącznik: FV_2026_10_77e5.pdf]
 ```
 
 oraz przypomnienie dzień przed terminem płatności.
+
+- **Biała lista VAT przy każdej fakturze.** Numer konta sprzedawcy jest sprawdzany w API
+  Ministerstwa Finansów od razu i ponownie w dniu przypomnienia, bo liczy się stan z dnia przelewu.
+  Przy kwocie od 15 000 zł i koncie spoza listy dostajesz wyraźne ostrzeżenie (koszt nie do
+  odliczenia, solidarna odpowiedzialność za VAT). Identyfikator zapytania (ID) zostaje w
+  wiadomości jako dowód weryfikacji. To też ochrona przed fakturami z podmienionym numerem konta.
 
 - **Działa u Ciebie.** Token KSeF nie opuszcza Twojego serwera, nie ma pośrednika. To ważne, bo
   [CERT Polska ostrzega](https://android.com.pl/tech/1038580-phishing-faktury-ksef-ostrzezenie-cert/)
@@ -81,7 +89,8 @@ faceitall123qwe@gmail.com.
 
 ksef-watch polls Poland's National e-Invoicing System (KSeF) for **incoming** invoices and sends
 a Telegram or e-mail notification with seller, amount, due date, bank account and the invoice as
-PDF/HTML/XML, plus a reminder before the payment is due. KSeF itself sends no notifications.
+PDF/HTML/XML, plus a reminder before the payment is due, and checks the seller's bank account against the
+Ministry of Finance VAT white list. KSeF itself sends no notifications.
 Self-hosted, read-only token, multiple tax IDs, Docker image. MIT licensed.
 
 ```bash
