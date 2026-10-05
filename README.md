@@ -28,7 +28,6 @@ oraz przypomnienie dzień przed terminem płatności.
   Przy kwocie od 15 000 zł i koncie spoza listy dostajesz wyraźne ostrzeżenie (koszt nie do
   odliczenia, solidarna odpowiedzialność za VAT). Identyfikator zapytania (ID) zostaje w
   wiadomości jako dowód weryfikacji. To też ochrona przed fakturami z podmienionym numerem konta.
-
 - **Działa u Ciebie.** Token KSeF nie opuszcza Twojego serwera, nie ma pośrednika. To ważne, bo
   [CERT Polska ostrzega](https://android.com.pl/tech/1038580-phishing-faktury-ksef-ostrzezenie-cert/)
   przed fałszywymi „powiadomieniami o fakturach z KSeF”.
