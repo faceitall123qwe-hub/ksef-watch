@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Faktury KSeF do Excela — zestawienie z plików XML i paczki ZIP, za darmo</title>
+<meta name="description" content="Wrzuć paczkę ZIP pobraną z KSeF albo wiele plików XML faktur i dostań tabelę: numery, daty, sprzedawcy i NIP-y, netto i VAT według stawek, brutto, terminy i konta. Eksport do CSV dla Excela. Wszystko w przeglądarce.">
+<link rel="canonical" href="https://faceitall123qwe-hub.github.io/ksef-watch/zestawienie/">
+<meta property="og:title" content="Faktury KSeF do Excela — zestawienie z XML i ZIP">
+<meta property="og:description" content="Paczka faktur z KSeF zamieniona w tabelę z netto i VAT według stawek. Bez wysyłania plików.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pl_PL">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Jak przenieść faktury z KSeF do Excela?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Pobierz faktury z Aplikacji Podatnika KSeF jako paczkę ZIP albo pliki XML, upuść je na tej stronie i kliknij „Pobierz CSV”. Plik otworzy się w Excelu z kolumnami: numer, daty, sprzedawca, NIP, netto i VAT według stawek, brutto, termin płatności i konto."}},
+    {"@type": "Question", "name": "Czy faktury są wysyłane na serwer?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Nie. Pliki są rozpakowywane i odczytywane wyłącznie w Twojej przeglądarce. Strona nie ma serwera."}},
+    {"@type": "Question", "name": "Jak liczone są kwoty korekt?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Faktury korygujące (KOR) są oznaczone w kolumnie Rodzaj, a ich kwoty przenoszone są tak, jak zapisał je wystawca w pliku (zwykle jako różnica). Suma uwzględnia je ze znakiem z faktury."}},
+    {"@type": "Question", "name": "Co z fakturami w walutach obcych?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Kwoty pokazywane są w walucie faktury, a waluta jest w osobnej kolumnie. Wiersz sumy obejmuje tylko faktury w PLN; pozostałe sumy podane są osobno dla każdej waluty."}}
+  ]
+}
+</script>
+<style>
+:root{
+  --paper:#f4efe4; --paper-2:#ebe4d4; --ink:#17222c; --ink-2:#4a5560; --rule:#d8cdb6;
+  --margin:#c9564a; --green:#2f6b4f; --stamp:#b8322a; --amber:#9a6a12;
+  --mono:"IBM Plex Mono",ui-monospace,monospace; --serif:"Newsreader",Georgia,serif;
+  --sans:"Instrument Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font:16.5px/1.6 var(--sans);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,rgba(118,96,58,.09) 31px 32px)}
+body::before{content:"";position:fixed;inset:0 auto 0 64px;width:2px;background:var(--margin);opacity:.35;pointer-events:none}
+a{color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:0 28px 0 96px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:26px 0;gap:18px;flex-wrap:wrap}
+.brand{font:600 15px/1 var(--mono);text-decoration:none}
+.brand b{color:var(--stamp)}
+nav .links{display:flex;gap:22px;font-size:15px}
+.kicker{font:500 13px/1 var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--margin);margin:36px 0 18px}
+h1{font:700 clamp(34px,4.6vw,58px)/1.05 var(--serif);letter-spacing:-.02em;max-width:16em}
+h1 em{font-style:italic;font-weight:400;color:var(--green)}
+.lede{font-size:19px;color:var(--ink-2);max-width:44em;margin:20px 0 32px}
+.drop{display:block;border:2px dashed var(--ink);background:#fffdf8;padding:44px 28px;text-align:center;cursor:pointer;
+  box-shadow:8px 8px 0 rgba(23,34,44,.1);transition:background .15s,transform .15s}
+.drop:hover,.drop.over{background:#f7fbf5;transform:translate(-2px,-2px)}
+.drop strong{display:block;font:600 24px var(--serif);margin-bottom:6px}
+.drop span{color:var(--ink-2);font-size:15px}
+.drop input{display:none}
+.under{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:14px;font:13px var(--mono);color:var(--ink-2)}
+.under button{font:inherit;background:none;border:0;border-bottom:1px solid;cursor:pointer;color:var(--ink)}
+.status{font:13px var(--mono);color:var(--ink-2);min-height:20px;margin-top:10px}
+.status.err{color:var(--stamp)}
+
+#out{display:none;margin-top:30px}
+#out.on{display:block}
+.bar{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:14px}
+.kpis{display:flex;gap:30px;flex-wrap:wrap;font:13px var(--mono);color:var(--ink-2)}
+.kpis b{display:block;font:600 24px var(--serif);color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--paper);border:0;cursor:pointer;text-decoration:none;
+  font:600 15px var(--sans);padding:12px 20px;border-radius:3px;box-shadow:4px 4px 0 var(--margin);transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--margin)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:1.5px solid var(--ink)}
+.scroll{overflow-x:auto;border:1.5px solid var(--ink);background:#fffdf8}
+table{border-collapse:collapse;font-size:13.5px;width:100%}
+th,td{padding:8px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top;white-space:nowrap}
+th{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);background:var(--paper-2);position:sticky;top:0}
+td.n,th.n{text-align:right;font-family:var(--mono);font-size:13px}
+td.name{white-space:normal;min-width:180px}
+tfoot td{font-weight:600;background:var(--paper-2);border-top:1.5px solid var(--ink)}
+.kor{color:var(--amber);font:600 12px var(--mono)}
+.soon{color:var(--stamp);font-weight:600}
+.small{font:12px var(--mono);color:var(--ink-2)}
+
+.promo{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center;background:var(--ink);color:var(--paper);padding:34px;margin-top:56px}
+.promo h2{font:600 clamp(24px,2.6vw,32px)/1.2 var(--serif);margin-bottom:8px}
+.promo p{color:#c9c3b6;max-width:40em}
+.promo .btn{background:var(--paper);color:var(--ink)}
+section{padding:64px 0;border-top:1.5px solid var(--ink);margin-top:56px}
+h2.sec{font:600 clamp(26px,3vw,36px)/1.15 var(--serif);margin-bottom:24px}
+details{border-bottom:1px solid var(--rule);padding:18px 0}
+summary{cursor:pointer;font:600 19px/1.35 var(--serif);list-style:none;display:flex;justify-content:space-between;gap:20px}
+summary::after{content:"+";font:400 22px var(--mono);color:var(--margin)}
+details[open] summary::after{content:"−"}
+details p{color:var(--ink-2);margin-top:10px;max-width:48em}
+footer{padding:28px 0 48px;font:13px/1.6 var(--mono);color:var(--ink-2)}
+@media (max-width:900px){
+  body::before{left:18px}
+  .wrap{padding:0 18px 0 36px}
+  .promo{grid-template-columns:1fr}
+  nav .links{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <a class="brand" href="../">ksef<b>·</b>watch</a>
+  <span class="links"><a href="../faktura/">Otwórz XML faktury</a><a href="../biala-lista/">Biała lista</a><a href="../">Powiadomienia z KSeF →</a></span>
+</nav>
+
+<p class="kicker">Faktury KSeF · zestawienie</p>
+<h1>Paczka faktur z KSeF <em>w jednej tabeli.</em></h1>
+<p class="lede">Upuść paczkę ZIP pobraną z Aplikacji Podatnika KSeF albo dowolną liczbę plików XML. Dostaniesz zestawienie
+  z netto i VAT według stawek, sumami, terminami i kontami, gotowe do Excela. Pliki nie opuszczają przeglądarki.</p>
+
+<label class="drop" id="drop">
+  <strong>Upuść ZIP albo pliki XML</strong>
+  <span>albo kliknij, żeby wybrać — można zaznaczyć wiele naraz</span>
+  <input type="file" id="file" multiple accept=".xml,.zip,text/xml,application/xml,application/zip">
+</label>
+<div class="under"><button type="button" id="sample">Pokaż przykład (3 faktury)</button></div>
+<p class="status" id="status" aria-live="polite"></p>
+
+<div id="out">
+  <div class="bar">
+    <div class="kpis" id="kpis"></div>
+    <div style="display:flex;gap:12px"><button class="btn" id="csv">Pobierz CSV (Excel)</button><button class="btn ghost" id="clear">Wyczyść</button></div>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr>
+      <th>#</th><th>Rodzaj</th><th>Nr faktury</th><th>Wystawiona</th><th>Sprzedawca</th><th>NIP sprzed.</th><th>Nabywca</th><th>NIP nab.</th>
+      <th class="n">Netto 23%</th><th class="n">VAT 23%</th><th class="n">Netto 8%</th><th class="n">VAT 8%</th>
+      <th class="n">Netto 5%</th><th class="n">VAT 5%</th><th class="n">Netto 0%/zw/np/oo</th>
+      <th class="n">Netto razem</th><th class="n">VAT razem</th><th class="n">Brutto</th><th>Waluta</th>
+      <th>Termin</th><th>Konto</th><th>Nr KSeF</th><th>Plik</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+    <tfoot id="foot"></tfoot>
+  </table></div>
+  <p class="small" id="other"></p>
+</div>
+
+<div class="promo">
+  <div>
+    <h2>Zamiast pobierać paczki — dostawaj każdą fakturę od razu.</h2>
+    <p>ksef-watch wysyła każdą nową fakturę kosztową z KSeF na Telegram lub e-mail, z PDF, terminem płatności
+      i kontrolą białej listy VAT. Darmowy, działa na Twoim komputerze.</p>
+  </div>
+  <a class="btn" href="../">Zobacz ksef-watch</a>
+</div>
+
+<section>
+  <h2 class="sec">Najczęstsze pytania</h2>
+  <details><summary>Jak przenieść faktury z KSeF do Excela?</summary>
+    <p>Pobierz faktury z Aplikacji Podatnika KSeF jako paczkę ZIP albo pliki XML, upuść je na tej stronie i kliknij „Pobierz CSV”. Plik otworzy się w Excelu z kolumnami: numer, daty, sprzedawca, NIP, netto i VAT według stawek, brutto, termin płatności i konto.</p></details>
+  <details><summary>Czy faktury są wysyłane na serwer?</summary>
+    <p>Nie. Pliki są rozpakowywane i odczytywane wyłącznie w Twojej przeglądarce. Strona nie ma serwera.</p></details>
+  <details><summary>Jak liczone są kwoty korekt?</summary>
+    <p>Faktury korygujące (KOR) są oznaczone w kolumnie Rodzaj, a ich kwoty przenoszone są tak, jak zapisał je wystawca w pliku (zwykle jako różnica). Suma uwzględnia je ze znakiem z faktury.</p></details>
+  <details><summary>Co z fakturami w walutach obcych?</summary>
+    <p>Kwoty pokazywane są w walucie faktury, a waluta jest w osobnej kolumnie. Wiersz sumy obejmuje tylko faktury w PLN; pozostałe sumy podane są osobno dla każdej waluty.</p></details>
+</section>
+
+<footer>Narzędzie niezależne, niezwiązane z Ministerstwem Finansów. Odczyt pól struktury FA(3) (P_13_x, P_14_x, P_15).
+  · <a href="https://github.com/faceitall123qwe-hub/ksef-watch">kod źródłowy</a></footer>
+</div>
+
+<script>
+const JSZIP = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+const SAMPLES = ["5260250995-20261001-TEST0-AA.xml", "4659611901-20261002-TEST1-AA.xml", "1675877590-20261003-TEST2-AA.xml"];
+const $ = id => document.getElementById(id);
+let rows = [], seen = new Set(), zipLib = null;
+
+const loadZip = () => zipLib ??= new Promise((ok, fail) => {
+  const s = Object.assign(document.createElement("script"), { src: JSZIP });
+  s.onload = () => ok(window.JSZip); s.onerror = () => fail(new Error("nie udało się pobrać biblioteki ZIP"));
+  document.head.append(s);
+});
+
+const kids = (n, name) => [...n.children].filter(c => c.localName === name);
+const path = (root, p) => p.split("/").reduce((ns, name) => ns.flatMap(n => kids(n, name)), [root]);
+const txt = (root, p) => (path(root, p)[0]?.textContent || "").trim();
+const num = (root, p) => { const v = parseFloat(txt(root, p)); return isNaN(v) ? 0 : v; };
+const r2 = v => Math.round(v * 100) / 100;
+
+function parseInvoice(xmlText, file) {
+  const doc = new DOMParser().parseFromString(xmlText, "application/xml");
+  const r = doc.documentElement;
+  if (doc.getElementsByTagName("parsererror").length || r.localName !== "Faktura") return null;
+  const fa = path(r, "Fa")[0];
+  if (!fa) return null;
+  const sum = names => r2(names.reduce((s, n) => s + num(fa, n), 0));
+  const due = path(fa, "Platnosc/TerminPlatnosci/Termin").map(e => e.textContent.trim()).sort()[0] || "";
+  const row = {
+    kind: txt(fa, "RodzajFaktury") || "VAT", number: txt(fa, "P_2"), issued: txt(fa, "P_1"),
+    seller: txt(r, "Podmiot1/DaneIdentyfikacyjne/Nazwa"), sellerNip: txt(r, "Podmiot1/DaneIdentyfikacyjne/NIP"),
+    buyer: txt(r, "Podmiot2/DaneIdentyfikacyjne/Nazwa"), buyerNip: txt(r, "Podmiot2/DaneIdentyfikacyjne/NIP"),
+    n23: sum(["P_13_1"]), v23: sum(["P_14_1"]), n8: sum(["P_13_2"]), v8: sum(["P_14_2"]),
+    n5: sum(["P_13_3"]), v5: sum(["P_14_3"]),
+    // 0% (domestic, intra-EU, export), exempt, outside scope, reverse charge, margin, plus the
+    // flat-rate taxi and OSS bases, which have no column of their own here
+    nOther: sum(["P_13_4", "P_13_5", "P_13_6_1", "P_13_6_2", "P_13_6_3", "P_13_7", "P_13_8", "P_13_9", "P_13_10", "P_13_11"]),
+    vOther: sum(["P_14_4", "P_14_5"]),
+    gross: num(fa, "P_15"), currency: txt(fa, "KodWaluty") || "PLN", due,
+    account: txt(fa, "Platnosc/RachunekBankowy/NrRB"),
+    ksef: (file.match(/\d{10}-\d{8}-[0-9A-F]{12}-[0-9A-F]{2}/i) || [""])[0], file,
+  };
+  row.net = r2(row.n23 + row.n8 + row.n5 + row.nOther);
+  row.vat = r2(row.v23 + row.v8 + row.v5 + row.vOther);
+  return row;
+}
+
+async function addFiles(files) {
+  const entries = [];
+  for (const f of files) {
+    if (/\.zip$/i.test(f.name)) {
+      const zip = await (await loadZip()).loadAsync(f);
+      for (const e of Object.values(zip.files))
+        if (!e.dir && /\.xml$/i.test(e.name)) entries.push([e.name.split("/").pop(), await e.async("string")]);
+    } else entries.push([f.name, await f.text()]);
+  }
+  let added = 0, dup = 0, bad = [];
+  for (const [name, text] of entries) {
+    const row = parseInvoice(text, name);
+    if (!row) { bad.push(name); continue; }
+    const key = `${row.sellerNip}|${row.number}|${row.kind}`;  // a seller can't reuse a number (KSeF rejects duplicates)
+    if (seen.has(key)) { dup++; continue; }
+    seen.add(key); rows.push(row); added++;
+  }
+  rows.sort((a, b) => (a.issued || "").localeCompare(b.issued || "") || a.number.localeCompare(b.number));
+  const s = $("status");
+  s.className = "status" + (bad.length ? " err" : "");
+  s.textContent = `Dodano ${added} faktur` + (dup ? `, pominięto ${dup} duplikatów` : "") +
+    (bad.length ? `. Nie rozpoznano jako faktury KSeF: ${bad.slice(0, 5).join(", ")}${bad.length > 5 ? "…" : ""}` : ".");
+  render();
+}
+
+const fmt = v => v ? v.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
+const pl = d => d ? d.split("-").reverse().join(".") : "";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const MONEY = ["n23", "v23", "n8", "v8", "n5", "v5", "nOther", "net", "vat", "gross"];
+
+function totals(list) {
+  return Object.fromEntries(MONEY.map(k => [k, r2(list.reduce((s, r) => s + r[k], 0))]));
+}
+
+function render() {
+  if (!rows.length) { $("out").classList.remove("on"); return; }
+  const today = new Date(new Date().toDateString());
+  $("rows").innerHTML = rows.map((r, i) => {
+    const days = r.due ? Math.round((new Date(r.due) - today) / 864e5) : null;
+    return `<tr><td class="n">${i + 1}</td><td>${r.kind.startsWith("KOR") ? `<span class="kor">${esc(r.kind)}</span>` : esc(r.kind)}</td>
+      <td>${esc(r.number)}</td><td>${pl(r.issued)}</td><td class="name">${esc(r.seller)}</td><td>${esc(r.sellerNip)}</td>
+      <td class="name">${esc(r.buyer)}</td><td>${esc(r.buyerNip)}</td>
+      ${MONEY.map(k => `<td class="n">${fmt(r[k])}</td>`).join("")}<td>${esc(r.currency)}</td>
+      <td class="${days !== null && days <= 3 ? "soon" : ""}">${pl(r.due)}</td><td class="small">${esc(r.account)}</td>
+      <td class="small">${esc(r.ksef)}</td><td class="small">${esc(r.file)}</td></tr>`;
+  }).join("");
+  const pln = rows.filter(r => r.currency === "PLN"), t = totals(pln);
+  $("foot").innerHTML = `<tr><td colspan="8">Suma (PLN, ${pln.length} faktur)</td>${MONEY.map(k => `<td class="n">${fmt(t[k])}</td>`).join("")}<td colspan="5"></td></tr>`;
+  const others = [...new Set(rows.map(r => r.currency).filter(c => c !== "PLN"))];
+  $("other").textContent = others.map(c => { const tt = totals(rows.filter(r => r.currency === c));
+    return `${c}: netto ${fmt(tt.net)}, VAT ${fmt(tt.vat)}, brutto ${fmt(tt.gross)}`; }).join(" · ");
+  $("kpis").innerHTML = `<span><b>${rows.length}</b>faktur</span><span><b>${fmt(t.net) || "0,00"}</b>netto PLN</span>` +
+    `<span><b>${fmt(t.vat) || "0,00"}</b>VAT PLN</span><span><b>${fmt(t.gross) || "0,00"}</b>brutto PLN</span>`;
+  $("out").classList.add("on");
+}
+
+$("csv").onclick = () => {
+  const head = ["rodzaj", "nr_faktury", "data_wystawienia", "sprzedawca", "nip_sprzedawcy", "nabywca", "nip_nabywcy",
+    "netto_23", "vat_23", "netto_8", "vat_8", "netto_5", "vat_5", "netto_0_zw_np_oo", "netto_razem", "vat_razem", "brutto",
+    "waluta", "termin_platnosci", "konto", "nr_ksef", "plik"];
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const n = v => v ? v.toFixed(2).replace(".", ",") : "";  // Polish Excel expects a decimal comma
+  const lines = [head.join(";"), ...rows.map(r => [q(r.kind), q(r.number), r.issued, q(r.seller), q(r.sellerNip), q(r.buyer),
+    q(r.buyerNip), ...MONEY.map(k => n(r[k])), r.currency, r.due, q(r.account), r.ksef, q(r.file)].join(";"))];
+  const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "zestawienie-faktur-ksef.csv" });
+  a.click(); URL.revokeObjectURL(a.href);
+};
+
+$("clear").onclick = () => { rows = []; seen = new Set(); $("status").textContent = ""; $("file").value = ""; render(); };
+$("file").onchange = e => addFiles([...e.target.files]).catch(err => { $("status").className = "status err"; $("status").textContent = err.message; });
+const drop = $("drop");
+["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles([...e.dataTransfer.files]).catch(err => { $("status").textContent = err.message; }));
+$("sample").onclick = async () => {
+  const files = await Promise.all(SAMPLES.map(async n => new File([await (await fetch("przyklad/" + n)).text()], n)));
+  addFiles(files);
+};
+</script>
+</body>
+</html>
