@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Powiadomienia o nowych fakturach z KSeF na Telegram i e-mail — ksef-watch</title>
+<meta name="description" content="KSeF nie wysyła powiadomień o fakturach kosztowych. ksef-watch sprawdza KSeF co kilka minut i wysyła na Telegram lub e-mail kwotę, termin płatności, numer konta i PDF faktury, sprawdza konto na białej liście VAT i przypomina o przelewie. Darmowy, open source, dla firm i biur rachunkowych.">
+<link rel="canonical" href="https://faceitall123qwe-hub.github.io/ksef-watch/">
+<meta property="og:title" content="ksef-watch — powiadomienia o fakturach kosztowych z KSeF">
+<meta property="og:description" content="Nowa faktura w KSeF? Dowiesz się w ciągu kilku minut, z kwotą, terminem, kontem i PDF. Z kontrolą białej listy VAT.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://faceitall123qwe-hub.github.io/ksef-watch/">
+<meta property="og:image" content="https://faceitall123qwe-hub.github.io/ksef-watch/gui.png">
+<meta property="og:locale" content="pl_PL">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ksef-watch",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Windows, Linux, Docker",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "PLN"},
+  "description": "Powiadomienia na Telegram i e-mail o nowych fakturach kosztowych w KSeF, przypomnienia o terminach płatności i weryfikacja konta na białej liście VAT.",
+  "downloadUrl": "https://github.com/faceitall123qwe-hub/ksef-watch/releases/latest",
+  "license": "https://opensource.org/licenses/MIT",
+  "inLanguage": "pl"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Czy KSeF wysyła powiadomienia o nowych fakturach?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Nie. KSeF nie wysyła e-maili, SMS-ów ani powiadomień push, gdy ktoś wystawi Ci fakturę. Informację widzisz dopiero po zalogowaniu albo w programie, który pobiera faktury. ksef-watch sprawdza KSeF co kilka minut i sam wysyła powiadomienie."}},
+    {"@type": "Question", "name": "Czy mój token KSeF jest bezpieczny?",
+     "acceptedAnswer": {"@type": "Answer", "text": "ksef-watch działa na Twoim komputerze lub serwerze, token nie trafia do nikogo innego. Na Windows jest przechowywany w Menedżerze poświadczeń. Wystarczy token z jedynym uprawnieniem „przeglądanie faktur”, który nie pozwala niczego wystawić ani zmienić."}},
+    {"@type": "Question", "name": "Po co sprawdzać konto na białej liście VAT?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Zapłata ponad 15 000 zł na rachunek spoza białej listy VAT oznacza, że wydatek nie będzie kosztem podatkowym, a nabywca odpowiada solidarnie za VAT sprzedawcy. ksef-watch sprawdza konto przy każdej fakturze i w dniu przypomnienia o płatności, a identyfikator zapytania zostaje w wiadomości jako dowód."}},
+    {"@type": "Question", "name": "Ile kosztuje ksef-watch?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Program jest darmowy i otwarty (licencja MIT). Płatne jest tylko wdrożenie i opieka dla firm lub biur rachunkowych, które nie chcą konfigurować go same."}},
+    {"@type": "Question", "name": "Czy ksef-watch obsłuży wielu klientów biura rachunkowego?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Tak. Dodajesz dowolną liczbę NIP-ów, a powiadomienia każdego klienta mogą trafiać do osobnego czatu Telegram."}}
+  ]
+}
+</script>
+<style>
+:root{
+  --paper:#f4efe4; --paper-2:#ebe4d4; --ink:#17222c; --ink-2:#4a5560; --rule:#d8cdb6;
+  --margin:#c9564a; --green:#2f6b4f; --stamp:#b8322a; --tg:#e9f2fb; --tg-ink:#1d3a52;
+  --mono:"IBM Plex Mono",ui-monospace,monospace; --serif:"Newsreader",Georgia,serif;
+  --sans:"Instrument Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font:17px/1.65 var(--sans);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,rgba(118,96,58,.09) 31px 32px);
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 auto 0 64px;width:2px;background:var(--margin);opacity:.35;pointer-events:none}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px 0 96px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:26px 0}
+.brand{font:600 15px/1 var(--mono);letter-spacing:.02em}
+.brand b{color:var(--stamp)}
+.navlinks{display:flex;gap:26px;font-size:15px}
+.navlinks a{text-decoration:none;border-bottom:1px solid transparent}
+.navlinks a:hover{border-color:var(--ink)}
+
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;padding:56px 0 96px}
+.kicker{font:500 13px/1 var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--margin);margin-bottom:22px}
+h1{font:700 clamp(40px,5.6vw,70px)/1.02 var(--serif);letter-spacing:-.02em}
+h1 em{font-style:italic;font-weight:400;color:var(--green)}
+.lede{font-size:20px;color:var(--ink-2);max-width:34em;margin:26px 0 34px}
+.cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);text-decoration:none;
+  font-weight:600;padding:15px 24px;border-radius:3px;box-shadow:4px 4px 0 var(--margin);transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--margin)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:1.5px solid var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:var(--paper);transform:none}
+.small{font:13px/1.5 var(--mono);color:var(--ink-2);margin-top:16px}
+
+.phone{position:relative;background:#fff;border:1.5px solid var(--ink);border-radius:22px;padding:18px 16px 22px;
+  box-shadow:10px 12px 0 rgba(23,34,44,.12);max-width:410px;justify-self:end;transform:rotate(1.2deg)}
+.phone header{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid #e6e1d6;margin-bottom:14px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font:600 13px var(--mono)}
+.phone header small{display:block;color:#7b8590;font-size:12px}
+.bubble{background:var(--tg);color:var(--tg-ink);border-radius:14px 14px 14px 4px;padding:14px 15px;font-size:14.5px;line-height:1.55;
+  opacity:0;transform:translateY(12px);animation:in .6s ease-out forwards}
+.bubble+.bubble{margin-top:10px}
+.bubble:nth-of-type(2){animation-delay:.9s}
+.bubble strong{display:block;margin-bottom:6px}
+.bubble .num{font-family:var(--mono);font-size:13.5px}
+.bubble .warn{display:block;margin-top:8px;color:var(--stamp);font-weight:600}
+.file{display:flex;align-items:center;gap:10px;margin-top:10px;background:#fff;border-radius:8px;padding:8px 10px;font:13px var(--mono)}
+.file i{width:26px;height:32px;background:var(--stamp);border-radius:3px;color:#fff;display:grid;place-items:center;font:600 9px var(--mono);font-style:normal}
+.stamp{position:absolute;right:-26px;top:-22px;transform:rotate(11deg);border:2.5px solid var(--stamp);color:var(--stamp);
+  font:700 13px/1.15 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px;background:rgba(244,239,228,.9);
+  text-align:center;opacity:0;animation:stamp .35s 1.8s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes in{to{opacity:1;transform:none}}
+@keyframes stamp{from{opacity:0;transform:rotate(11deg) scale(1.8)}to{opacity:1;transform:rotate(11deg) scale(1)}}
+
+section{padding:88px 0;border-top:1.5px solid var(--ink)}
+.label{font:500 13px/1 var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--margin);margin-bottom:18px}
+h2{font:600 clamp(30px,3.6vw,44px)/1.1 var(--serif);letter-spacing:-.01em;max-width:20em;margin-bottom:40px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:36px}
+.col h3{font:600 20px/1.3 var(--serif);margin-bottom:10px}
+.col p{color:var(--ink-2)}
+.idx{font:500 13px var(--mono);color:var(--margin);display:block;margin-bottom:12px}
+
+.ledger{width:100%;border-collapse:collapse;font-size:16px;background:rgba(255,255,255,.45)}
+.ledger th,.ledger td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--rule);vertical-align:top}
+.ledger th{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);background:var(--paper-2)}
+.ledger td:first-child{font-weight:600;width:28%}
+.ledger .no{color:var(--stamp);font-family:var(--mono)}
+.ledger .yes{color:var(--green);font-family:var(--mono)}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.note{border-left:3px solid var(--stamp);padding:6px 0 6px 20px;font-size:18px}
+.note b{font-family:var(--mono)}
+ul.ticks{list-style:none}
+ul.ticks li{padding:12px 0 12px 30px;border-bottom:1px dashed var(--rule);position:relative}
+ul.ticks li::before{content:"✓";position:absolute;left:0;top:11px;color:var(--green);font-weight:700}
+
+details{border-bottom:1px solid var(--rule);padding:20px 0}
+summary{cursor:pointer;font:600 20px/1.35 var(--serif);list-style:none;display:flex;justify-content:space-between;gap:20px}
+summary::after{content:"+";font:400 24px var(--mono);color:var(--margin)}
+details[open] summary::after{content:"−"}
+details p{color:var(--ink-2);margin-top:10px;max-width:46em}
+
+.final{text-align:left;padding:96px 0 72px}
+.final h2{margin-bottom:24px}
+footer{padding:28px 0 48px;font:13px/1.6 var(--mono);color:var(--ink-2);border-top:1px solid var(--rule)}
+code{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 6px;border-radius:3px}
+
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.on{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.bubble,.stamp,.reveal{opacity:1;transform:none}}
+@media (max-width:860px){
+  body::before{left:18px}
+  .wrap{padding:0 18px 0 36px}
+  .hero,.split{grid-template-columns:1fr}
+  .phone{justify-self:start;transform:none;margin-top:12px}
+  .stamp{right:-6px}
+  .cols{grid-template-columns:1fr}
+  .navlinks{display:none}
+  .ledger td:first-child{width:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <span class="brand">ksef<b>·</b>watch</span>
+  <span class="navlinks">
+    <a href="#jak">Jak działa</a><a href="#biala-lista">Biała lista</a><a href="#biura">Dla biur</a><a href="#faq">Pytania</a>
+    <a href="https://github.com/faceitall123qwe-hub/ksef-watch">GitHub</a>
+  </span>
+</nav>
+
+<header class="hero">
+  <div>
+    <p class="kicker">Powiadomienia o fakturach kosztowych z KSeF</p>
+    <h1>KSeF nie powie Ci, że przyszła faktura. <em>ksef&#8209;watch powie.</em></h1>
+    <p class="lede">Co kilka minut sprawdza KSeF i wysyła na Telegram lub e-mail kwotę, termin płatności,
+      numer konta i PDF faktury. Sprawdza konto na białej liście VAT i przypomina o przelewie dzień przed terminem.</p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/faceitall123qwe-hub/ksef-watch/releases/latest">Pobierz dla Windows</a>
+      <a class="btn ghost" href="https://github.com/faceitall123qwe-hub/ksef-watch#uruchomienie-docker">Docker / serwer</a>
+    </div>
+    <p class="small">Darmowy · open source (MIT) · działa u Ciebie, token tylko do odczytu</p>
+  </div>
+  <div class="phone" aria-label="Przykładowe powiadomienie w Telegramie">
+    <span class="stamp">Sprawdź<br>konto</span>
+    <header><span class="avatar">KW</span><div><b>ksef-watch</b><small>bot</small></div></header>
+    <div class="bubble">
+      <strong>Nowa faktura kosztowa — Moja Firma</strong>
+      Od: Serwis Klimatyzacji Zimny<br>
+      Kwota: <span class="num">19 680,00 PLN</span> brutto<br>
+      Termin: <span class="num">13.10.2026</span> (za 7 dni)<br>
+      Konto: <span class="num">PL61 1090 1014 0000 0712 1981 2874</span>
+      <span class="warn">UWAGA: konta NIE ma na białej liście VAT tego sprzedawcy.</span>
+      <div class="file"><i>PDF</i>FV_c5b442.pdf</div>
+    </div>
+    <div class="bubble"><strong>Termin płatności jutro — Moja Firma</strong>
+      Drukarnia Kowalski: <span class="num">1 525,20 PLN</span><br>Biała lista VAT: konto zgodne</div>
+  </div>
+</header>
+
+<section id="problem" class="reveal">
+  <p class="label">Problem</p>
+  <h2>Od 2026 roku faktury przychodzą przez KSeF. Powiadomień nie ma żadnych.</h2>
+  <div class="cols">
+    <div class="col"><span class="idx">01</span><h3>Cisza w skrzynce</h3>
+      <p>KSeF nie wysyła e-maili ani SMS-ów, gdy ktoś wystawi Ci fakturę. Kontrahent nie musi Ci jej już przesyłać.</p></div>
+    <div class="col"><span class="idx">02</span><h3>„Raz w miesiącu” to za rzadko</h3>
+      <p>Programy radzą pobrać faktury na koniec miesiąca. Termin płatności 7 dni mija wcześniej — a z nim rabaty i dobre relacje.</p></div>
+    <div class="col"><span class="idx">03</span><h3>Fałszywe „powiadomienia KSeF”</h3>
+      <p>CERT Polska ostrzega przed phishingiem udającym powiadomienia o fakturach. Prawdziwe przychodzą tylko z narzędzia, które sam skonfigurujesz.</p></div>
+  </div>
+</section>
+
+<section id="jak" class="reveal">
+  <p class="label">Jak działa</p>
+  <h2>Trzy minuty konfiguracji, potem działa samo.</h2>
+  <div class="cols">
+    <div class="col"><span class="idx">01</span><h3>Token tylko do odczytu</h3>
+      <p>W Aplikacji Podatnika KSeF generujesz token z jedynym uprawnieniem <code>przeglądanie faktur</code>. Nie da się nim niczego wystawić.</p></div>
+    <div class="col"><span class="idx">02</span><h3>Bot Telegram albo e-mail</h3>
+      <p>W programie dodajesz firmę i bota. Przycisk „Wykryj” sam uzupełnia ID czatu, „Wyślij test” sprawdza połączenie.</p></div>
+    <div class="col"><span class="idx">03</span><h3>Działa w tle</h3>
+      <p>Co kilka minut pyta KSeF o nowe faktury, w których jesteś nabywcą. Nowa faktura trafia do Ciebie zwykle po 1–2 minutach.</p></div>
+  </div>
+</section>
+
+<section id="biala-lista" class="reveal">
+  <p class="label">Biała lista VAT</p>
+  <div class="split">
+    <div>
+      <h2>Każde konto sprawdzone, zanim zrobisz przelew.</h2>
+      <p class="note">Przelew powyżej <b>15 000 zł</b> na rachunek spoza białej listy to wydatek, którego nie odliczysz,
+        i solidarna odpowiedzialność za VAT sprzedawcy.</p>
+    </div>
+    <table class="ledger">
+      <thead><tr><th>Kiedy</th><th>Co sprawdza ksef-watch</th></tr></thead>
+      <tbody>
+        <tr><td>Nowa faktura</td><td>Konto z faktury w API Ministerstwa Finansów: <span class="yes">zgodne</span> albo <span class="no">NIE ma na liście</span></td></tr>
+        <tr><td>Dzień przypomnienia</td><td>Sprawdza ponownie, bo liczy się stan z dnia przelewu</td></tr>
+        <tr><td>Kwota ≥ 15 000 zł</td><td>Wyraźne ostrzeżenie o koszcie i odpowiedzialności za VAT</td></tr>
+        <tr><td>Dowód</td><td>Identyfikator zapytania MF zostaje w wiadomości</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="biura" class="reveal">
+  <p class="label">Dla biur rachunkowych</p>
+  <div class="split">
+    <h2>Wszyscy klienci w jednym miejscu. Każdy z osobnym czatem.</h2>
+    <ul class="ticks">
+      <li>Dowolna liczba NIP-ów w jednej instalacji</li>
+      <li>Powiadomienia klienta mogą trafiać do jego własnej grupy Telegram</li>
+      <li>Wiesz o fakturze klienta, zanim on zadzwoni z pytaniem</li>
+      <li>Tokeny w Menedżerze poświadczeń Windows, nie w pliku</li>
+      <li>Wdrożenie i opieka na zlecenie — <a href="mailto:faceitall123qwe@gmail.com?subject=ksef-watch%20dla%20biura">napisz</a></li>
+    </ul>
+  </div>
+</section>
+
+<section id="faq" class="reveal">
+  <p class="label">Pytania</p>
+  <h2>Najczęstsze pytania</h2>
+  <details><summary>Czy KSeF wysyła powiadomienia o nowych fakturach?</summary>
+    <p>Nie. KSeF nie wysyła e-maili, SMS-ów ani powiadomień push, gdy ktoś wystawi Ci fakturę. Informację widzisz dopiero po zalogowaniu albo w programie, który pobiera faktury. ksef-watch sprawdza KSeF co kilka minut i sam wysyła powiadomienie.</p></details>
+  <details><summary>Czy mój token KSeF jest bezpieczny?</summary>
+    <p>ksef-watch działa na Twoim komputerze lub serwerze, token nie trafia do nikogo innego. Na Windows jest przechowywany w Menedżerze poświadczeń. Wystarczy token z jedynym uprawnieniem „przeglądanie faktur”, który nie pozwala niczego wystawić ani zmienić.</p></details>
+  <details><summary>Po co sprawdzać konto na białej liście VAT?</summary>
+    <p>Zapłata ponad 15 000 zł na rachunek spoza białej listy VAT oznacza, że wydatek nie będzie kosztem podatkowym, a nabywca odpowiada solidarnie za VAT sprzedawcy. ksef-watch sprawdza konto przy każdej fakturze i w dniu przypomnienia, a identyfikator zapytania zostaje w wiadomości jako dowód.</p></details>
+  <details><summary>Ile kosztuje ksef-watch?</summary>
+    <p>Program jest darmowy i otwarty (licencja MIT). Płatne jest tylko wdrożenie i opieka dla firm lub biur rachunkowych, które nie chcą konfigurować go same.</p></details>
+  <details><summary>Czy ksef-watch obsłuży wielu klientów biura rachunkowego?</summary>
+    <p>Tak. Dodajesz dowolną liczbę NIP-ów, a powiadomienia każdego klienta mogą trafiać do osobnego czatu Telegram.</p></details>
+  <details><summary>Windows pokazuje ostrzeżenie przy uruchomieniu. Dlaczego?</summary>
+    <p>Plik nie jest podpisany płatnym certyfikatem wydawcy, więc filtr SmartScreen go nie zna. Kliknij „Więcej informacji”, a potem „Uruchom mimo to”. Kod źródłowy i proces budowania są publiczne na GitHubie.</p></details>
+</section>
+
+<section class="final reveal">
+  <h2>Następna faktura przyjdzie do Ciebie sama.</h2>
+  <div class="cta">
+    <a class="btn" href="https://github.com/faceitall123qwe-hub/ksef-watch/releases/latest">Pobierz ksef-watch</a>
+    <a class="btn ghost" href="mailto:faceitall123qwe@gmail.com?subject=ksef-watch">Wdrożenie dla biura</a>
+  </div>
+</section>
+
+<footer>
+  ksef-watch · open source, licencja MIT · <a href="https://github.com/faceitall123qwe-hub/ksef-watch">github.com/faceitall123qwe-hub/ksef-watch</a><br>
+  Projekt niezależny, niezwiązany z Ministerstwem Finansów. KSeF — Krajowy System e-Faktur.
+</footer>
+</div>
+<script>
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

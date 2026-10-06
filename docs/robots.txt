@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://faceitall123qwe-hub.github.io/ksef-watch/sitemap.xml
