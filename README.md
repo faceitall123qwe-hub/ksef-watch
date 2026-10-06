@@ -1,6 +1,6 @@
 # ksef-watch
 
-Strona: **[faceitall123qwe-hub.github.io/ksef-watch](https://faceitall123qwe-hub.github.io/ksef-watch/)**
+Strona: **[faceitall123qwe-hub.github.io/ksef-watch](https://faceitall123qwe-hub.github.io/ksef-watch/)** · darmowe narzędzia w przeglądarce: [masowa weryfikacja białej listy VAT](https://faceitall123qwe-hub.github.io/ksef-watch/biala-lista/) · [podgląd i PDF faktury XML z KSeF](https://faceitall123qwe-hub.github.io/ksef-watch/faktura/)
 
 [![test](https://github.com/faceitall123qwe-hub/ksef-watch/actions/workflows/test.yml/badge.svg)](https://github.com/faceitall123qwe-hub/ksef-watch/actions/workflows/test.yml)
 
