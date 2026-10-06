@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from ksef2 import Client
 from ksef2.models import InvoicesFilter
 
-from . import invoice, whitelist
+from . import invoice, rendering, whitelist
 from .config import Company, Config
 from .store import Store
 
@@ -13,23 +13,6 @@ log = logging.getLogger("ksef-watch")
 # KSeF makes an invoice queryable a minute or two after its permanent-storage timestamp, so each
 # query reaches back past the watermark; duplicates are dropped by the store.
 OVERLAP = timedelta(minutes=30)
-
-
-def render(xml: bytes, kind: str, number: str) -> tuple[str, bytes] | None:
-    safe = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in number) or "faktura"
-    if kind == "pdf":
-        try:
-            from ksef2.renderers import InvoicePDFExporter
-            return f"{safe}.pdf", InvoicePDFExporter().export_from_string(xml)
-        except Exception as e:  # WeasyPrint needs Pango; without it fall back to HTML
-            log.warning("PDF rendering unavailable (%s), sending HTML instead", type(e).__name__)
-            kind = "html"
-    if kind == "html":
-        from ksef2.renderers import InvoiceXSLTRenderer
-        return f"{safe}.html", InvoiceXSLTRenderer().render_from_string(xml).encode("utf-8")
-    if kind == "xml":
-        return f"{safe}.xml", xml
-    return None
 
 
 def white_list(inv: invoice.Invoice, cfg: Config, today) -> list[str]:
@@ -70,7 +53,7 @@ def check_company(company: Company, cfg: Config, client: Client, store: Store,
         xml = auth.invoices.download_invoice(ksef_number=meta.ksef_number)
         inv = invoice.parse(xml, meta.ksef_number)
         text = invoice.new_invoice_message(inv, company.name, today, white_list(inv, cfg, today))
-        attachment = render(xml, cfg.attachment, inv.number)
+        attachment = rendering.attachment(xml, cfg.attachment, inv.number)
         for n in cfg.notifiers:
             n.send(text, attachment, chat_id=company.chat_id)
         store.add(company.nip, inv)  # only after sending, so a failed send is retried next round

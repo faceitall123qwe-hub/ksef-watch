@@ -9,3 +9,5 @@ config.toml
 *.egg-info/
 build/
 PLAN.md
+dist/
+*.spec

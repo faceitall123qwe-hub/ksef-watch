@@ -21,4 +21,4 @@ jobs:
       - name: PDF renders inside the image
         run: |
           docker run --rm -v "$PWD/tests/fixtures:/fx:ro" --entrypoint python ksef-watch -c \
-            "from ksef_watch.watcher import render; n, d = render(open('/fx/fa3_sample.xml','rb').read(), 'pdf', 'x'); assert n.endswith('.pdf') and d[:5] == b'%PDF-', n"
+            "from ksef_watch.rendering import attachment; n, d = attachment(open('/fx/fa3_sample.xml','rb').read(), 'pdf', 'x'); assert n.endswith('.pdf') and d[:5] == b'%PDF-', n"

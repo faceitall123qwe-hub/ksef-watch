@@ -31,7 +31,18 @@ class Config:
     notifiers: list = field(default_factory=list)
 
 
+KEYRING_SERVICE = "ksef-watch"
+
+
 def _secret(section: dict, key: str) -> str:
+    """A secret comes from the Windows Credential Manager / OS keyring, an environment variable,
+    or the config file itself, in that order of preference."""
+    if name := section.get(f"{key}_keyring"):
+        import keyring
+        value = keyring.get_password(KEYRING_SERVICE, name)
+        if not value:
+            raise SystemExit(f"Missing secret '{name}' in the system credential store")
+        return value
     env = section.get(f"{key}_env")
     value = os.environ.get(env) if env else section.get(key)
     if not value:
@@ -53,7 +64,7 @@ def load(path: Path) -> Config:
         whitelist_check=bool(k.get("whitelist_check", True)),
     )
     for c in raw.get("company", []):
-        no_token = not (c.get("token") or c.get("token_env"))
+        no_token = not (c.get("token") or c.get("token_env") or c.get("token_keyring"))
         token = None if env_name == "test" and no_token else _secret(c, "token")
         chat = c.get("telegram_chat_id")
         cfg.companies.append(Company(name=c["name"], nip=str(c["nip"]), token=token,

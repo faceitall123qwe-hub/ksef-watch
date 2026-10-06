@@ -38,6 +38,20 @@ oraz przypomnienie dzień przed terminem płatności.
 - **Nic nie ginie.** Wiadomość jest zapisywana jako wysłana dopiero, gdy Telegram/poczta ją
   przyjmie; przy awarii wysyłka ponawia się w następnym cyklu.
 
+## Windows — bez instalacji
+
+1. Pobierz `ksef-watch.exe` z [Releases](https://github.com/faceitall123qwe-hub/ksef-watch/releases/latest)
+   i uruchom. Plik nie jest podpisany certyfikatem, więc Windows może pokazać ostrzeżenie
+   SmartScreen: „Więcej informacji” → „Uruchom mimo to”.
+2. Dodaj firmę (nazwa, NIP, token KSeF). Biuro rachunkowe dodaje wszystkich klientów.
+3. Wpisz token bota Telegram, napisz cokolwiek do bota i kliknij „Wykryj”, żeby uzupełnić ID czatu.
+4. „Wyślij test”, potem „Zapisz i uruchamiaj w tle”.
+
+Tokeny trafiają do Menedżera poświadczeń Windows, nie do pliku. Sprawdzanie działa jako zadanie
+Harmonogramu zadań (także po restarcie, gdy jesteś zalogowany), PDF faktury drukuje Microsoft Edge.
+
+![Okno konfiguracji](docs/gui.png)
+
 ## Uruchomienie (Docker)
 
 ```bash
@@ -58,7 +72,7 @@ ksef-watch test-notify -c config.toml
 ksef-watch run -c config.toml        # albo `once` z crona / Harmonogramu zadań
 ```
 
-Na Windows PDF wymaga bibliotek GTK (WeasyPrint); bez nich ksef-watch sam wyśle wersję HTML.
+Na Windows PDF drukuje Microsoft Edge; gdy go nie ma, ksef-watch wyśle wersję HTML.
 
 ## Token KSeF
 

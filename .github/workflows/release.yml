@@ -1,0 +1,38 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install . pyinstaller pytest
+      - run: python -m pytest -q
+      - run: >
+          pyinstaller --noconfirm --onefile --noconsole --name ksef-watch --paths .
+          --collect-submodules ksef_watch --collect-data ksef2 --collect-data tzdata
+          --hidden-import keyring.backends.Windows --exclude-module weasyprint --exclude-module pytest
+          packaging/entry.py
+      - name: The built exe talks to the KSeF test environment
+        shell: bash
+        run: |
+          {
+            echo '[ksef]'
+            echo 'environment = "test"'
+            echo '[[company]]'
+            echo 'name = "CI"'
+            echo 'nip = "6069547652"'
+          } > ci.toml
+          ./dist/ksef-watch.exe once -c ci.toml --log ci.log
+          cat ci.log
+          grep -q "CI (6069547652): 0 new" ci.log
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ksef-watch.exe
+          generate_release_notes: true

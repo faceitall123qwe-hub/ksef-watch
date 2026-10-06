@@ -200,3 +200,28 @@ def test_white_list_line_in_new_invoice_message(tmp_path, monkeypatch):
     store.set_watermark(company.nip, NOW - timedelta(hours=1))
     watcher.check_company(company, cfg, FakeClient([Meta(KSEF_NO, NOW - timedelta(minutes=5))]), store, NOW)
     assert "Biała lista VAT: konto zgodne" in rec.sent[0][0]
+
+
+# --- Windows setup window (logic only) ---------------------------------------------------------
+
+def test_nip_checksum():
+    from ksef_watch.gui import valid_nip
+    assert valid_nip("5260250995") and valid_nip("4659611901")
+    assert not valid_nip("5260250994") and not valid_nip("123") and not valid_nip("52602509x5")
+
+
+def test_gui_config_round_trip_loads(tmp_path, monkeypatch):
+    from ksef_watch import config, gui
+    monkeypatch.setattr(gui, "APP_DIR", tmp_path)
+    monkeypatch.setattr(gui, "CONFIG", tmp_path / "config.toml")
+    companies = [{"name": 'Biuro "Rachunek"', "nip": "5260250995", "has_token": True, "chat_id": "-100"},
+                 {"name": "Testowa", "nip": "4659611901", "has_token": False, "chat_id": ""}]
+    gui.write_config("production", 15, companies, "777")
+    assert gui.read_config() == ("production", 15, companies, "777")
+    secrets = {"token-5260250995": "tok", "telegram-bot": "bot"}
+    keyring = pytest.importorskip("keyring")  # installed on Windows only
+    monkeypatch.setattr(keyring, "get_password", lambda service, name: secrets.get(name))
+    gui.write_config("production", 15, companies[:1], "777")
+    cfg = config.load(tmp_path / "config.toml")
+    assert cfg.companies[0].token == "tok" and cfg.companies[0].chat_id == "-100"
+    assert cfg.notifiers[0].chat_id == "777" and cfg.interval_minutes == 15
